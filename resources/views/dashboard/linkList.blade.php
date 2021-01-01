@@ -22,6 +22,7 @@
     <table class="table table-striped  table-bordered" id="table">
       <thead>
         <tr>
+          <th scope="col">#</th>
           <th scope="col">Kısa Adres</th>
           <th scope="col">Hedef Adres</th>
           <th scope="col">Oluşturulma</th>
@@ -30,8 +31,14 @@
         </tr>
       </thead>
       <tbody>
+        @php
+        $i = 1 ;
+        @endphp
         @foreach($links as $link)
         <tr>
+          <td>
+            {{$i++}}
+          </td>
           <td><a href="{{route('direct',$link->short)}}" target="_blank" class="text-dark text-decoration-none" id="ourlink">
             {{$settings->site.'/'.$link->short}} <i class="fas fa-xs fa-pull-right fa-external-link-alt"></i>
           </td>
