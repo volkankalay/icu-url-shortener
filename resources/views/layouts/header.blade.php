@@ -49,8 +49,12 @@
             </div>
           @else
             <div >
-              <a href="{{route('login')}}" class="btn btn-light border p-2">@lang('homepage.login')</a>
-              <a href="{{route('register')}}" class="btn btn-light border p-2">@lang('homepage.register')</a>
+              @if($settings->login==1)
+                <a href="{{route('login')}}" class="btn btn-light border p-2">@lang('homepage.login')</a>
+              @endif
+              @if($settings->register==1)
+                <a href="{{route('register')}}" class="btn btn-light border p-2">@lang('homepage.register')</a>
+              @endif
             </div>
           @endif
     </div>

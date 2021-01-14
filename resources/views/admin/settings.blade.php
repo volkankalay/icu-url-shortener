@@ -67,6 +67,19 @@
           </div>
       </div>
 
+      <div class="dropdown-divider my-4"></div>
+
+      <div class="form-group row">
+        <label  class="col-lg-4 col-form-label">Kayıt Ol</label>
+        <div class="col-lg-8">
+          <div class="custom-control custom-switch">
+            <input type="checkbox" class="custom-control-input" name="register" id="swReg" @if($settings->register==1) checked @endif>
+            <label class="custom-control-label" for="swReg">Kullanıcı Kayıt Olabilsin.</label>
+          </div>
+          <small class="text-muted">Siteye yeni üyelerin kayıt olabilmesi için bu ayarı aktif hale getiriniz.</small>
+        </div>
+      </div>
+
     </div>
 
     <div class="col-lg-6">

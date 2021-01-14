@@ -20,6 +20,8 @@ class Settings extends Migration
           $table->string('keywords')->nullable();
           $table->string('description')->nullable();
           $table->string('logo');
+          $table->boolean('login')->default(1);
+          $table->boolean('register')->default(1);
           $table->string('favicon')->nullable();
           $table->longText('header_code')->nullable();
           $table->longText('footer_code')->nullable();

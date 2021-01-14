@@ -40,8 +40,8 @@ Route::get('/logout','App\Http\Controllers\AuthController@logout')->name('logout
 Route::middleware('isLogin')->group(function(){
 Route::get('/login','App\Http\Controllers\AuthController@login')->name('login');
 Route::post('/login','App\Http\Controllers\AuthController@loginPost')->name('login.post');
-Route::get('/register','App\Http\Controllers\AuthController@register')->name('register');
-Route::post('/register','App\Http\Controllers\AuthController@registerPost')->name('register.post');
+Route::get('/register','App\Http\Controllers\AuthController@register')->middleware('RegisterSetting')->name('register');
+Route::post('/register','App\Http\Controllers\AuthController@registerPost')->middleware('RegisterSetting')->name('register.post');
 });
 
 //    $$$

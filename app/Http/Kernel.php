@@ -65,5 +65,7 @@ class Kernel extends HttpKernel
         'LoginCheck' =>  \App\Http\Middleware\LoginCheck::class,
         'isLogin' =>  \App\Http\Middleware\isLogin::class,
         'isAdmin' =>  \App\Http\Middleware\isAdmin::class,
+        'LoginSetting' =>  \App\Http\Middleware\LoginSetting::class,
+        'RegisterSetting' =>  \App\Http\Middleware\RegisterSetting::class,
     ];
 }

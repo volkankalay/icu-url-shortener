@@ -26,6 +26,7 @@ class SettingsController extends Controller
         'logo'=>'image|max:2048',
         'favicon'=>'image|max:2048'
       ]);
+      //dd($request->register);
       $settings               =  Setting::first();
       $settings->site         =  $request->site;
       $settings->title        =  $request->title;
@@ -33,6 +34,13 @@ class SettingsController extends Controller
       $settings->header_code  =  $request->header_code;
       $settings->footer_code  =  $request->footer_code;
       $settings->updated_at   =  now();
+
+      if($request->register!=NULL){
+        $settings->register   = 1;
+      }
+      else{
+        $settings->register   = 0;
+      }
 
       if($request->hasFile('logo')){
         $logoName         = 'logo'.'.'.$request->logo->getClientOriginalExtension();
