@@ -11,16 +11,19 @@ class isAdmin
     /**
      * Handle an incoming request.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
+     * @param Request $request
+     * @param Closure $next
+     *
      * @return mixed
      */
     public function handle(Request $request, Closure $next)
     {
-      if(Auth::user()->role!=1){
-        toastr()->error('Yetkilendirme Hatası.');
-        return redirect()->route('dashboard');
-      }
+        if (Auth::user()->role != 1) {
+            toastr()->error('Yetkilendirme Hatası.');
+
+            return redirect()->route('dashboard');
+        }
+
         return $next($request);
     }
 }
