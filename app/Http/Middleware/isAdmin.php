@@ -11,14 +11,12 @@ class isAdmin
     /**
      * Handle an incoming request.
      *
-     * @param Request $request
-     * @param Closure $next
      *
      * @return mixed
      */
     public function handle(Request $request, Closure $next)
     {
-        if (Auth::user()->role != 1) {
+        if (! Auth::user()?->isAdmin()) {
             toastr()->error('Yetkilendirme Hatası.');
 
             return redirect()->route('dashboard');

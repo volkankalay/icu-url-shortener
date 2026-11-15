@@ -2,10 +2,12 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
+use App\Models\Setting;
+use App\Services\ReservedShortCodes;
 use Illuminate\Pagination\Paginator;
-use Illuminate\Support\Facades\Route;
-use Schema;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -16,7 +18,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
+        $this->app->scoped(ReservedShortCodes::class);
     }
 
     /**
@@ -26,7 +28,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-      Schema::defaultStringLength(191);
-      Paginator::useBootstrap();
+        Schema::defaultStringLength(191);
+        Paginator::useBootstrapFour();
+
+        View::creator(['auth.*', 'dashboard.*', 'admin.*'], function ($view) {
+            $view->with('settings', Setting::first());
+        });
     }
 }

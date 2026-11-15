@@ -1,87 +1,75 @@
 @extends('dashboard')
-@section('css')
-<link href="{{asset('css')}}/jquery.dataTables.css" rel="stylesheet">
-@endsection
+
+@push('theme-css')
+    <link rel="stylesheet" href="{{ asset('css/jquery.dataTables.css') }}">
+@endpush
+
 @section('dashboardcontent')
+    <header class="dashboard-heading">
+        <div><h1>Tüm bağlantılar</h1><p>{{ $links->count() }} aktif bağlantı</p></div>
+    </header>
 
-  @if($errors->any())
-  <div class="card col-lg-6 text-white bg-light mx-auto mt-4">
-    <div class="card-body">
-      <h5 class="card-title m-auto text-center text-dark">
-          {{$errors->first()}}
-      </h5>
-    </div>
-  </div>
-  @endif
-<section>
-  <div class="card border-0 p-5">
-    <div class="text-center text-primary h1 my-4">
-      Link Listesi
-    </div>
-  <div class="table-responsive">
-    <table class="table table-striped  table-bordered"id="table">
-      <thead>
-        <tr>
-          <th scope="col">#</th>
-          <th scope="col">Sahip</th>
-          <th scope="col">Kısaltılmış</th>
-          <th scope="col">Hedef</th>
-          <th scope="col">Tıklanma</th>
-          <th scope="col">&nbsp;</th>
-        </tr>
-      </thead>
-      <tbody>
-        @foreach($links as $link)
-        <tr>
-          <td>{{$link->id}}</td>
-          <td>{{$link->getUser->username}}</td>
-          <td data-content="Kopyalandı!" id="copylink" onclick="copyToClipboard('#copylink')" data-toggle="popover" data-placement="top">
-            {{$settings->site.'/'.$link->short}}
-            <a href="{{route('direct',$link->short)}}" target="_blank" class="text-dark text-decoration-none" id="ourlink">
-              <i class="fas fa-xs fa-pull-right fa-external-link-alt"></i>
-            </a>
-          </td>
-          <td>
-            {{Str::limit($link->url,50)}}
-            <a href="{{url($link->url)}}" target="_blank" class="text-dark text-decoration-none" id="ourlink">
-              <i class="fas fa-xs fa-pull-right fa-external-link-alt"></i>
-            </a>
-          </td>
-          <td>{{$link->visitorCount()}}</td>
+    @if ($errors->any())
+        <p class="dashboard-panel" role="alert">{{ $errors->first() }}</p>
+    @endif
+    <span id="admin-copy-status" role="status" class="dashboard-muted" hidden></span>
 
-          <td class="text-center">
-            <a href="{{route('url.show',$link->short)}}" class="text-decoration-none">
-              <button class="btn btn-primary btn-sm border shadow-hover-sm btn-block">Detaylar</button>
-            </a>
-            <button class="btn btn-danger btn-sm btn-block forceDeleteBtn" force-id="{{$link->id}}" force-short="{{$link->short}}">
-              Sil
-            </button>
-          </td>
-        </tr>
+    <x-dashboard.admin-table label="Tüm bağlantılar" :empty="$links->isEmpty() ? 'Gösterilecek aktif bağlantı yok.' : null"
+        :sort-options="['0:asc' => 'Kısa kod (A–Z)', '0:desc' => 'Kısa kod (Z–A)', '1:asc' => 'Hedef adres (A–Z)', '1:desc' => 'Hedef adres (Z–A)', '2:asc' => 'Sahip (A–Z)', '2:desc' => 'Sahip (Z–A)', '3:desc' => 'En çok tekil ziyaret', '3:asc' => 'En az tekil ziyaret']">
+        <x-slot:head>
+            <th scope="col" role="columnheader">Kısa bağlantı</th>
+            <th scope="col" role="columnheader">Hedef adres</th>
+            <th scope="col" role="columnheader">Sahip</th>
+            <th scope="col" role="columnheader">Tekil ziyaret</th>
+            <th scope="col" role="columnheader" class="links-actions">İşlemler</th>
+        </x-slot:head>
+        @foreach ($links as $link)
+            <tr role="row">
+                <td role="cell" class="links-short" data-order="{{ $link->short }}">
+                    <a href="{{ route('direct', $link->short) }}" target="_blank" rel="noopener">/{{ $link->short }} <span aria-hidden="true">↗</span></a>
+                    <button type="button" class="dashboard-button admin-copy" aria-label="Kısa adresi kopyala"
+                            data-copy-value="{{ rtrim($settings->site, '/') }}/{{ $link->short }}" data-copy-status="admin-copy-status">
+                        <i class="fas fa-copy" aria-hidden="true"></i>
+                    </button>
+                </td>
+                <td role="cell" class="links-target">
+                    <span class="links-cell-label" aria-hidden="true">Hedef adres</span>
+                    <a href="{{ $link->url }}" target="_blank" rel="noopener" title="{{ $link->url }}">{{ $link->url }}</a>
+                </td>
+                <td role="cell"><span class="links-cell-label" aria-hidden="true">Sahip</span>{{ $link->owner?->username ?? '—' }}</td>
+                <td role="cell" class="links-views" data-order="{{ $link->visitorCount() }}">
+                    <span class="links-cell-label" aria-hidden="true">Tekil ziyaret</span>
+                    {{ $link->visitorCount() }} <small class="admin-secondary">{{ $link->total_clicks }} yönlendirme</small>
+                </td>
+                <td role="cell" class="links-actions">
+                    <div class="admin-table-actions">
+                        <a class="dashboard-button" href="{{ route('url.show', $link->short) }}">Detaylar <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
+                        @if (auth()->user()->isAdmin())
+                            <button type="button" class="dashboard-button admin-danger" data-toggle="modal" data-target="#delete-link-modal"
+                                data-disable-link="{{ $link->id }}" data-short-code="{{ $link->short }}">Devre dışı bırak</button>
+                        @endif
+                    </div>
+                </td>
+            </tr>
         @endforeach
-      </tbody>
-    </table>
-  </div>
-</div>
+    </x-dashboard.admin-table>
 
-</section>
-@include('modals.LinkForceDelete')
-
+    @if (auth()->user()->isAdmin())
+        @include('modals.LinkDelete')
+    @endif
 @endsection
+
 @section('js')
-<script src="{{asset('js')}}/jquery.dataTables.min.js"></script>
-<script type="text/javascript">
-$('#table').DataTable({
-    responsive: true
-});
-
-$("#table").on("click", ".forceDeleteBtn", function (){
-    id = $(this)[0].getAttribute('force-id');
-    st = $(this)[0].getAttribute('force-short');
-    $('#forceid').val(id);
-    $('#yazdirun').html(st);
-    $('#forceDeleteModal').modal();
-
-});
-</script>
+    @if ($links->isNotEmpty())
+        <script src="{{ asset('js/jquery.dataTables.min.js') }}"></script>
+        <script src="{{ asset('js/admin-table.js') }}"></script>
+        <script src="{{ asset('js/dashboard-copy.js') }}"></script>
+        <script>
+            $('#delete-link-modal').on('show.bs.modal', (event) => {
+                const link = event.relatedTarget.dataset;
+                $('#delete-link-id').val(link.disableLink);
+                $('#delete-link-code').text(link.shortCode);
+            });
+        </script>
+    @endif
 @endsection

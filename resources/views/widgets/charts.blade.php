@@ -1,1 +1,0 @@
-<!-- Grafikler eklenecektir -->

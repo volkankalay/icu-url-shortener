@@ -1,66 +1,89 @@
-@php
-$profile=Auth::user();
-@endphp
-
 @extends('dashboard')
+
+@push('theme-css')
+    <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
+@endpush
+
 @section('dashboardcontent')
-
-  <h3 class="px-2">@lang('homepage.dashboard')</h3>
-          <div class="dropdown-divider"></div>
-
-  <div class="alert alert-success alert-dismissible fade show m-3" role="alert" data-dismiss="alert" aria-label="Close">
-    <strong>Hoşgeldin</strong> {{Auth::user()->name.' '.Auth::user()->surname}} !
-    <p class="my-1"><strong>Son Girişin:</strong> {{$lastlogin->getDate()}}</p>
-    <p class="my-1"><strong>Tarayıcı / OS:</strong> {{$lastlogin->getBrowser().' / '.$lastlogin->getOs()}}</p>
-  </div>
-
-  <div class="container-fluid my-3">
-    @if($profile->linkCount()>0)
-    <div class="card">
-      <h3 class="stroke-primary text-white text-center p-3 border-bottom">Hesabında toplam <span class="stroke-success">{{$profile->linkCount()}}</span> adet kısaltılmış adres var.</h3>
-      <h3 class="stroke-success text-white text-center p-3">Görüntülenme</h3>
-
-    <div class="container">
-      <div class="row justify-content-center my-3">
-        <div class="col-lg-3 text-center">
-          <div class="card-header p-3 border text-primary h3">
-            Bugün
-          </div>
-          <div class="card-text p-4 text-center border h3 text-success">
-            {{$todayCount}}
-          </div>
+    <header class="dashboard-heading">
+        <div>
+            <h1>Genel bakış</h1>
+            <p>Hoş geldin, {{ auth()->user()->full_name }}.</p>
         </div>
-          <div class="col-lg-3 text-center">
-          <div class="card-header p-3 border text-primary h3">
-            Bu Ay
-          </div>
-          <div class="card-text p-4 text-center border h3 text-success">
-          {{$thisMonthCount}}
-        </div>
-        </div>
-          <div class="col-lg-3 text-center">
-          <div class="card-header p-3 border text-primary h3">
-            Toplam
-          </div>
-          <div class="card-text p-4 text-center border h3 text-success">
-        {{$linkViewCount}}
-      </div>
-        </div>
-      </div>
+    </header>
+
+    <section id="baglanti-olustur" class="dashboard-panel dashboard-create-panel" aria-labelledby="shortener-title">
+        <h2 id="shortener-title">Bağlantı oluştur</h2>
+        <form class="dashboard-form dashboard-shortener" method="post" action="{{ route('url.create.post') }}">
+            @csrf
+            <x-auth.field name="url" :label="__('homepage.linklabel')" type="url" inputmode="url" placeholder="https://example.com/…" maxlength="191" />
+            <button class="dashboard-button dashboard-primary" type="submit">@lang('homepage.shortbtn') <span aria-hidden="true">↗</span></button>
+        </form>
+        @if ($short = session('short_link'))
+            @php($shortUrl = rtrim($settings->site, '/').'/'.$short)
+            <div class="dashboard-result">
+                <i class="fas fa-check-circle" aria-hidden="true"></i>
+                <div>
+                    <strong>Kısa bağlantın hazır</strong>
+                    <div class="dashboard-result-actions">
+                        <a href="{{ route('direct', $short) }}" target="_blank" rel="noopener">{{ $shortUrl }} <span aria-hidden="true">↗</span></a>
+                        <button type="button" class="dashboard-button" data-copy-value="{{ $shortUrl }}" data-copy-status="short-link-copy-status">
+                            <i class="fas fa-copy" aria-hidden="true"></i> Kopyala
+                        </button>
+                    </div>
+                    <span id="short-link-copy-status" class="dashboard-copy-status" role="status"></span>
+                </div>
+            </div>
+        @endif
+    </section>
+
+    <div class="dashboard-stats">
+        <x-dashboard.stat label="Bağlantılarım" :value="$linkCount" icon="link" />
+        <x-dashboard.stat label="Toplam görüntülenme" :value="$totalClicks" icon="eye" />
+        <x-dashboard.stat label="Bugünkü ziyaret kayıtları" :value="$todayVisits" icon="clock" />
+        <x-dashboard.stat label="Bu ayki ziyaret kayıtları" :value="$monthVisits" icon="calendar-alt" />
     </div>
 
-      <div class="card-footer text-center">
-        <a href="{{route('url.list')}}" class="btn btn-primary">Adreslerim</a>
-      </div>
+    <div class="dashboard-overview">
+        <section class="dashboard-panel">
+            <h2>Son 7 gün</h2>
+            <p class="dashboard-muted">Günlük ziyaret kayıtları</p>
+            <x-dashboard.activity-chart :activity="$activity" label="Son 7 günün ziyaret kayıtları" />
+        </section>
+        <section class="dashboard-panel">
+            <h2>Son giriş</h2>
+            @if ($lastLogin)
+                <dl class="dashboard-facts">
+                    <div><dt>Tarih</dt><dd>{{ $lastLogin->getDate() ?? '—' }}</dd></div>
+                    <div><dt>Tarayıcı</dt><dd>{{ $lastLogin->browser ?? '—' }}</dd></div>
+                    <div><dt>İşletim sistemi</dt><dd>{{ $lastLogin->os ?? '—' }}</dd></div>
+                </dl>
+            @else
+                <p class="dashboard-muted">Henüz giriş kaydı yok.</p>
+            @endif
+        </section>
+        <section class="dashboard-panel dashboard-recent-panel">
+            <div class="dashboard-panel-heading">
+                <h2>Son bağlantılar</h2>
+                @if ($recentLinks->isNotEmpty())
+                    <a href="{{ route('url.list') }}">Tümünü gör <span aria-hidden="true">→</span></a>
+                @endif
+            </div>
+            @forelse ($recentLinks as $link)
+                <a class="dashboard-recent-link" href="{{ route('url.show', $link->short) }}">
+                    <span><strong>/{{ $link->short }}</strong><small>{{ $link->url }}</small></span>
+                    <span>{{ $link->total_clicks }} görüntülenme <span aria-hidden="true">→</span></span>
+                </a>
+            @empty
+                <p class="dashboard-muted">Henüz kısa bağlantın yok.</p>
+                <a class="dashboard-button" href="#baglanti-olustur">İlk bağlantını oluştur</a>
+            @endforelse
+        </section>
     </div>
-    @else
-    <div class="card">
-      <h3 class="stroke-danger text-white text-center p-3">Hesabında hiç kısaltılmış adres yok.</h3>
-      <div class="card-footer text-center">
-        <a href="{{route('url.create')}}" class="btn btn-success">Yeni Oluştur</a>
-      </div>
-    </div>
+@endsection
+
+@section('js')
+    @if (session()->has('short_link'))
+        <script src="{{ asset('js/dashboard-copy.js') }}"></script>
     @endif
-
-  </div>
 @endsection

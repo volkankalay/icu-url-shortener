@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">ICU Shortener</title>
+  <defs>
+    <linearGradient id="tile" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop stop-color="#253745"/>
+      <stop offset="1" stop-color="#06141b"/>
+    </linearGradient>
+  </defs>
+  <rect x="12" y="12" width="488" height="488" rx="118" fill="url(#tile)" stroke="#4a5c6a" stroke-width="12"/>
+  <g fill="none" stroke-width="36" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m225 194 50-50a66 66 0 0 1 93 93l-50 50" stroke="#9ba8ba"/>
+    <path d="m287 318-50 50a66 66 0 0 1-93-93l50-50" stroke="#ccd0cf"/>
+    <path d="m213 299 86-86" stroke="#ccd0cf"/>
+  </g>
+</svg>

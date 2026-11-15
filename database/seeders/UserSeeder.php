@@ -2,27 +2,29 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
+use App\Enums\UserType;
 use DB;
+use Illuminate\Database\Seeder;
 
 class UserSeeder extends Seeder
 {
     /**
      * Run the database seeds.
-     *
-     * @return void
      */
-    public function run()
+    public function run(): void
     {
-        DB::table('users')->insert([
-          'name'=>'Demo',
-          'surname'=>'Admin',
-          'email'=>'demo@admin.com',
-          'username'=>'admin',
-          'password'=>bcrypt(123456),
-          'role'=>1,
-          'created_at'=>now(),
-          'updated_at'=>now()
-        ]);
+        foreach (UserType::cases() as $userType) {
+
+            DB::table('users')->insert([
+                'created_at' => now(),
+                'updated_at' => now(),
+                'name'       => 'Test',
+                'surname'    => $userType->label(),
+                'email'      => $userType->value . '@demo.com',
+                'username'   => $userType->value,
+                'user_type'  => $userType->value,
+                'password'   => bcrypt(123456),
+            ]);
+        }
     }
 }
