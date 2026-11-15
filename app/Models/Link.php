@@ -2,42 +2,82 @@
 
 namespace App\Models;
 
-use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property      int                      $id
+ * @property      int                      $owner_id
+ * @property      string                   $url
+ * @property      string                   $short
+ * @property      int                      $total_clicks
+ * @property      Carbon|null              $created_at
+ * @property      Carbon|null              $updated_at
+ * @property      Carbon|null              $deleted_at
+ * @property-read User|null                $owner
+ * @property-read Collection<int, Visitor> $visitors
+ * @property-read int|null                 $visitors_count
+ */
 class Link extends Model
 {
-    use HasFactory;
+    use SoftDeletes;
 
-    public function getDate()
+    protected $fillable = ['owner_id', 'url', 'short'];
+
+    protected function casts(): array
     {
-        return Carbon::parse($this->created_at)->locale('tr_TR')->isoFormat('lll');
+        return [
+            'owner_id'     => 'integer',
+            'total_clicks' => 'integer',
+        ];
     }
 
-    public function getVisitors()
+    public function getDate(): ?string
     {
-        return $this->hasMany('App\Models\Visitor', 'link_id', 'id')->get();
+        return $this->created_at?->locale('tr_TR')->isoFormat('lll');
     }
 
-    public function getTodayCount()
+    /** @return HasMany<Visitor, $this> */
+    public function visitors(): HasMany
     {
-        return $this->getVisitors()->whereBetween('tarih', [Carbon::today(), now()])->count();
+        return $this->hasMany(Visitor::class);
     }
 
-    public function getMonthCount()
+    public function getTodayCount(): int
     {
-        return $this->getVisitors()->whereBetween('tarih', [Carbon::today()->startOfMonth(), now()])->count();
+        $now = now();
+
+        return $this->visitors()->whereBetween('created_at', [$now->copy()->startOfDay(), $now])->count();
     }
 
-    public function visitorCount()
+    public function getMonthCount(): int
     {
-        return $this->hasMany('App\Models\Visitor', 'link_id', 'id')->count();
+        $now = now();
+
+        return $this->visitors()->whereBetween('created_at', [$now->copy()->startOfMonth(), $now])->count();
     }
 
-    public function getUser()
+    public function visitorCount(): int
     {
-        return $this->hasOne('App\Models\User', 'id', 'owner')->withTrashed();
+        return $this->visitors_count ?? $this->visitors()->count();
     }
 
+    /** @return BelongsTo<User, $this> */
+    public function owner(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'owner_id')->withTrashed();
+    }
+
+    protected static function boot(): void
+    {
+        parent::boot();
+
+        self::deleting(function (Link $model) {
+            $model->visitors()->delete();
+        });
+    }
 }

@@ -2,28 +2,45 @@
 
 namespace App\Models;
 
-use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property      int         $id
+ * @property      int         $user_id
+ * @property      string|null $ip_address
+ * @property      string|null $browser
+ * @property      string|null $os
+ * @property      Carbon|null $tarih
+ * @property      Carbon|null $created_at
+ * @property      Carbon|null $updated_at
+ * @property      Carbon|null $deleted_at
+ * @property-read User|null   $user
+ */
 class Login extends Model
 {
-    use HasFactory;
+    use SoftDeletes;
 
-    public $timestamps = false;
+    protected $fillable = ['user_id', 'ip_address', 'browser', 'os', 'tarih'];
 
-    public function getDate()
+    protected function casts(): array
     {
-        return Carbon::parse($this->tarih)->locale('tr_TR')->isoFormat('lll');
+        return [
+            'user_id' => 'integer',
+            'tarih'   => 'datetime',
+        ];
     }
 
-    public function getBrowser()
+    /** @return BelongsTo<User, $this> */
+    public function user(): BelongsTo
     {
-        return $this->browser;
+        return $this->belongsTo(User::class)->withTrashed();
     }
 
-    public function getOs()
+    public function getDate(): ?string
     {
-        return $this->os;
+        return ($this->tarih ?? $this->created_at)?->locale('tr_TR')->isoFormat('lll');
     }
 }

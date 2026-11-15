@@ -1,6 +1,14 @@
 <?php
 
 return [
+    'current_password_invalid' => 'Mevcut şifren doğru değil.',
+    'confirm_delete_required' => 'Hesabını kapatmak istediğini onayla.',
+    'password_updated' => 'Şifren güncellendi.',
+    'last_admin' => 'Son yönetici hesabı kapatılamaz.',
+    'account_deleted' => 'Hesabın kapatıldı.',
+    'login_intro' => 'Bağlantılarını yönetmek ve ziyaretlerini takip etmek için oturum aç.',
+    'register_intro' => 'Kısa bağlantılar oluşturmak ve görüntülenmelerini takip etmek için bir hesap aç.',
+    'show_password' => 'Şifreyi göster',
 
     /*
     |--------------------------------------------------------------------------
@@ -22,6 +30,8 @@ return [
     'usernameoremail'=>'Kullanıcı Adı veya E-Posta',
     'password'=>'Şifre',
     'passwordcheck'=>'Şifre (Tekrar)',
+    'password_minimum' => 'En az 8 karakter kullan.',
+    'password_invalid' => 'Şifre geçersiz veya çok uzun.',
     'rememberme'=>'Beni Hatırla',
     'loginBtn'=>'Giriş Yap',
     'registerBtn'=>'Kayıt Ol',

@@ -2,18 +2,44 @@
 
 namespace App\Models;
 
-use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Casts\VisitorOptionsCast;
+use App\Support\VisitorOptions;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property      int                 $id
+ * @property      int                 $link_id
+ * @property      VisitorOptions|null $options
+ * @property      Carbon|null         $created_at
+ * @property      Carbon|null         $updated_at
+ * @property      Carbon|null         $deleted_at
+ * @property-read Link|null           $link
+ */
 class Visitor extends Model
 {
-    use HasFactory;
+    use SoftDeletes;
 
-    public $timestamps = false;
+    protected $fillable = ['link_id', 'options'];
 
-    public function getDate()
+    protected function casts(): array
     {
-        return Carbon::parse($this->tarih)->locale('tr_TR')->isoFormat('lll');
+        return [
+            'link_id' => 'integer',
+            'options' => VisitorOptionsCast::class,
+        ];
+    }
+
+    /** @return BelongsTo<Link, $this> */
+    public function link(): BelongsTo
+    {
+        return $this->belongsTo(Link::class)->withTrashed();
+    }
+
+    public function getDate(): ?string
+    {
+        return $this->created_at?->locale('tr_TR')->isoFormat('lll');
     }
 }

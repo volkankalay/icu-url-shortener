@@ -11,14 +11,12 @@ class LoginCheck
     /**
      * Handle an incoming request.
      *
-     * @param Request $request
-     * @param Closure $next
      *
      * @return mixed
      */
     public function handle(Request $request, Closure $next)
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             toastr()->error('Oturum Geçersiz.');
 
             return redirect()->route('login');

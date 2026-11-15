@@ -2,8 +2,10 @@
 
 namespace App\Providers;
 
+use App\Services\ApiTokens;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
-use Illuminate\Support\Facades\Gate;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -25,6 +27,6 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
-        //
+        Auth::viaRequest('api-bearer', fn (Request $request) => $this->app->make(ApiTokens::class)->resolve($request->bearerToken()));
     }
 }

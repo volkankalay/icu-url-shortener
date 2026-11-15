@@ -1,0 +1,49 @@
+:is(#toast-container > div, .fl-flasher) {
+    --toast-accent: var(--theme-info-fg);
+    --toast-surface: color-mix(in srgb, var(--toast-accent) 12%, var(--theme-surface));
+}
+
+:is(#toast-container > .toast-success, .fl-flasher.fl-success) {
+    --toast-accent: var(--theme-success-fg);
+}
+
+:is(#toast-container > .toast-warning, .fl-flasher.fl-warning) {
+    --toast-accent: var(--theme-warning-fg);
+}
+
+:is(#toast-container > .toast-error, .fl-flasher.fl-error) {
+    --toast-accent: var(--theme-error-fg);
+}
+
+body #toast-container > div,
+body #toast-container > div:hover,
+body .fl-flasher.fl-flasher {
+    border: 1px solid color-mix(in srgb, var(--toast-accent) 35%, var(--theme-border));
+    border-inline-start: 4px solid var(--toast-accent);
+    border-radius: 12px;
+    background-color: var(--toast-surface);
+    color: var(--theme-text);
+    box-shadow: 0 8px 24px rgb(0 0 0 / 16%);
+}
+
+body #toast-container > div {
+    padding-inline: 16px;
+    opacity: 1;
+}
+
+body #toast-container > :is(.toast-success, .toast-info, .toast-warning, .toast-error) {
+    background-image: none !important;
+}
+
+#toast-container .toast-title {
+    color: var(--toast-accent);
+}
+
+#toast-container .toast-close-button {
+    color: var(--theme-text);
+    text-shadow: none;
+}
+
+#toast-container .toast-progress {
+    background-color: var(--toast-accent);
+}

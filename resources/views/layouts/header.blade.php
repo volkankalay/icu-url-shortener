@@ -6,29 +6,47 @@
   <meta name="keywords" content="{{$settings->keywords}}">
   <meta name="description" content="{{$settings->description}}">
   <meta name="author" content="Volkan Kalay">
-  <link rel="icon" type="image/x-icon" href="{{$settings->favicon}}" />
+  <link rel="icon" href="{{ $settings->faviconUrl() }}">
     <title>{{$settings->title}}</title>
   <link href="{{asset('vendor')}}/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-  <link href="{{asset('vendor')}}/fontawesome-free/css/all.min.css" rel="stylesheet">
-  <link href="{{asset('vendor')}}/simple-line-icons/css/simple-line-icons.css" rel="stylesheet" type="text/css">
-  <link href="https://fonts.googleapis.com/css?family=Lato:300,400,700,300italic,400italic,700italic" rel="stylesheet" type="text/css">
-  <link href="{{asset('css')}}/landing-page.css" rel="stylesheet">
-  <script src="https://kit.fontawesome.com/49b41ce5ec.js" crossorigin="anonymous"></script>
+  <link href="{{ asset('vendor/fontawesome-free/css/fontawesome.min.css') }}" rel="stylesheet">
+  <link href="{{ asset('css/notifications.css') }}" rel="stylesheet">
+  <style>
+    :root {
+      @foreach (\App\Support\Theme::COLORS['light'] as $role => $color)
+        --theme-{{ $role }}: {{ $color }};
+      @endforeach
+    }
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      @foreach (\App\Support\Theme::COLORS['dark'] as $role => $color)
+        --theme-{{ $role }}: {{ $color }};
+      @endforeach
+    }
+  </style>
+  @hasSection('body-class')
+    <script src="{{ asset('js/theme.js') }}"></script>
+  @endif
   @yield('css')
 
-  @toastr_css
 
 {{$settings->header_code}}
 </head>
-<a id="topBtn" href="#top" class="go-top"><i class="fa fa-chevron-up"></i></a>
-<div id="top" ></div>
-<body>
+<body id="top" class="@yield('body-class')">
   <!-- Navigation -->
   <nav class="navbar navbar-light bg-light static-top">
     <div class="container">
       <a class="navbar-brand text-dark" href="{{route('home')}}">
-        <img src="{{$settings->logo}}" class="img-responsive" width="36px"> {{$settings->title}}</a>
+        <img src="{{ $settings->logoUrl() }}" alt="" class="img-responsive" width="36" height="36"> {{$settings->title}}</a>
 
+      <div class="nav-actions">
+          @hasSection('body-class')
+            <button id="theme-toggle" class="btn btn-light theme-toggle" type="button"
+                    aria-label="{{ __('homepage.dark_mode') }}" aria-pressed="false" hidden>
+              <i class="fas fa-moon" aria-hidden="true"></i>
+              <i class="fas fa-sun" aria-hidden="true"></i>
+            </button>
+          @endif
           @auth
             <div class="dropdown">
               <button class="btn btn-light border dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -48,14 +66,13 @@
               </div>
             </div>
           @else
-            <div >
               @if($settings->login==1)
                 <a href="{{route('login')}}" class="btn btn-light border p-2">@lang('homepage.login')</a>
               @endif
               @if($settings->register==1)
-                <a href="{{route('register')}}" class="btn btn-light border p-2">@lang('homepage.register')</a>
+                <a href="{{route('register')}}" class="btn btn-light border p-2 nav-register">@lang('homepage.register')</a>
               @endif
-            </div>
           @endif
+      </div>
     </div>
   </nav>

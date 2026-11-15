@@ -1,6 +1,17 @@
 
+@hasSection('body-class')
+<footer class="landing-footer">
+  <div class="landing-shell">
+    <a href="{{ route('home') }}">
+      <img src="{{ $settings->logoUrl() }}" width="28" height="28" alt="">
+      {{ $settings->title }}
+    </a>
+    <small>© {{ date('Y') }} {{ $settings->title }}. @lang('homepage.rights').</small>
+  </div>
+</footer>
+@else
 <!-- Footer -->
-<footer class="footer bg-light">
+<footer class="footer bg-light py-5">
   <div class="container">
     <div class="row">
       <div class="col-lg-12 h-100 text-center mx-auto my-auto">
@@ -26,13 +37,12 @@
     </div>
   </div>
 </footer>
+@endif
 
-<!-- Bootstrap core JavaScript -->
-<script src="{{asset('vendor')}}/jquery/jquery.min.js"></script>
-<script src="{{asset('vendor')}}/bootstrap/js/bootstrap.bundle.min.js"></script>
-<script src="{{asset('js/my.js')}}"></script>
-@toastr_js
-@toastr_render
+@if (auth()->check() || request()->routeIs('home'))
+    <script src="{{ asset('vendor/jquery/jquery.min.js') }}"></script>
+    <script src="{{ asset('vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+@endif
 @yield('js')
 </body>
 

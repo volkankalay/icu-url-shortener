@@ -1,96 +1,63 @@
 @extends('dashboard')
+
+@push('theme-css')
+    <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/profile.css') }}">
+@endpush
+
 @section('dashboardcontent')
-
-  <h3 class="px-2">@lang('auth.profile')</h3>
-          <div class="dropdown-divider"></div>
-
-@if($errors->any())
-<div class="card col-lg-6 text-white bg-light mx-auto mt-4">
-  <div class="card-body">
-    <h5 class="card-title m-auto text-center">
-      <span class="text-dark text-decoration-none">
-        {{$errors->first()}}
-      </span>
-    </h5>
-  </div>
-</div>
-@endif
-<div class="row">
-
-  <div class="col-lg-6 my-3">
-    <div class="card mb-3">
-      <div class="row no-gutters">
-        <div class="col-md-4 p-4 m-auto border-right">
-          <img src="{{asset('img/user.svg')}}" class="card-img" alt="profile" width="100px">
+    <header class="dashboard-heading">
+        <div>
+            <h1>@lang('auth.profile')</h1>
+            <p>Hesap bilgilerini ve şifreni yönet.</p>
         </div>
-        <div class="col-md-8">
-          <div class="card-body">
-            <h5 class="card-title">{{$profile->username}}</h5>
-            <p class="card-text">
-              <span class="font-weight-bolder">Ad:</span> {{$profile->name}}
-            </p>
-            <p class="card-text">
-              <span class="font-weight-bolder">Soyad:</span> {{$profile->surname}}
-            </p>
-            <p class="card-text">
-              <span class="font-weight-bolder">E-Posta:</span> {{$profile->email}}
-            </p>
-            <p class="card-text">
-              <span class="font-weight-bolder">Kısaltma:</span> {{$profile->linkCount()}}
-            </p>
+    </header>
 
-            <p class="card-text"><small class="text-muted">Kayıt: {{$profile->getCreatedDate()}}</small></p>
-          </div>
-        </div>
-      </div>
+    <div class="profile-grid">
+        <section class="dashboard-panel profile-identity" aria-labelledby="profile-identity-title">
+            <div class="profile-identity-heading">
+                <span class="profile-avatar" aria-hidden="true">{{ Str::upper(Str::substr($profile->name, 0, 1) . Str::substr($profile->surname, 0, 1)) }}</span>
+                <div>
+                    <h2 id="profile-identity-title">{{ $profile->full_name }}</h2>
+                    <p class="dashboard-muted">{{ '@' . $profile->username }}</p>
+                </div>
+                <span class="profile-type-badge" aria-label="Hesap türü: {{ $profile->user_type->label() }}">{{ $profile->user_type->label() }}</span>
+            </div>
+            <dl class="dashboard-facts profile-facts">
+                <div class="profile-email"><dt>@lang('auth.email')</dt><dd>{{ $profile->email }}</dd></div>
+                <div><dt>Kayıt tarihi</dt><dd>{{ $profile->getCreatedDate() ?? '—' }}</dd></div>
+                <div><dt>Aktif bağlantı</dt><dd><a href="{{ route('url.list') }}">{{ $linkCount }}</a></dd></div>
+            </dl>
+        </section>
+
+        <section class="dashboard-panel profile-security" aria-labelledby="profile-security-title">
+            <h2 id="profile-security-title">Şifre değiştir</h2>
+            <form class="dashboard-form profile-password-form" action="{{ route('profile.pass') }}" method="post">
+                @csrf
+                <x-auth.field name="current_password" label="Mevcut şifre" type="password" autocomplete="current-password" error-bag="passwordChange" />
+                <div class="profile-password-fields">
+                    <x-auth.field name="password" label="Yeni şifre" type="password" autocomplete="new-password" minlength="8" maxlength="72" :hint="__('auth.password_minimum')" error-bag="passwordChange" />
+                    <x-auth.field name="password_confirmation" label="Yeni şifreyi doğrula" type="password" autocomplete="new-password" minlength="8" maxlength="72" error-bag="passwordChange" />
+                </div>
+                <button type="submit" class="dashboard-button dashboard-primary">Şifreyi güncelle</button>
+            </form>
+        </section>
+
+        <section class="dashboard-panel profile-close" aria-labelledby="profile-close-title">
+            <div>
+                <h2 id="profile-close-title">Hesabı kapat</h2>
+                <p class="dashboard-muted">Hesabın devre dışı kalır ve oturumun kapanır.</p>
+            </div>
+            <button type="button" class="dashboard-button profile-close-button" data-toggle="modal" data-target="#deleteModal">Hesabı kapat</button>
+        </section>
     </div>
-  </div>
 
-  <div class="col-lg-6 my-3">
-
-      <div class="list-group px-4">
-
-        <button class="list-group-item list-group-item-action bg-primary text-white" id="changePassword">
-          <div class="d-flex w-100 justify-content-between">
-            <h6 class="mb-1">Şifre Değiştir</h6>
-            <small><i class="fa fa-lock"></i></small>
-          </div>
-          <small>Giriş şifrenizi değiştirebilirsiniz.</small>
-        </button>
-
-        <button class="list-group-item list-group-item-action bg-light" disabled>
-          <div class="d-flex w-100 justify-content-between">
-            <h6 class="mb-1">E-Posta Değiştir</h6>
-            <small><i class="fa fa-paper-plane"></i></small>
-          </div>
-          <small>E-Posta değiştirme devre dışıdır.</small>
-        </button>
-
-        <button class="list-group-item list-group-item-action bg-danger text-white" id="deleteBtn">
-          <div class="d-flex w-100 justify-content-between">
-            <h6 class="mb-1">Hesabı Sil</h6>
-            <small><i class="fa fa-trash"></i></small>
-          </div>
-          <small>Dikkat bu işlemin geri dönüşü yoktur.</small>
-        </button>
-      </div>
-
-  </div>
-
-</div>
-
-
-@include('modals.ProfilePasswordChange')
-@include('modals.ProfileDeleteAccount')
-
+    @include('modals.ProfileDeleteAccount')
 @endsection
+
 @section('js')
-<script type="text/javascript">
-$('#changePassword').click(function(){
-  $('#passwordUpdateModal').modal();
-});
-$('#deleteBtn').click(function(){
-  $('#deleteModal').modal();
-});
-</script>
+    <script src="{{ asset('js/auth.js') }}"></script>
+    @if ($errors->accountDeletion->any())
+        <script>$('#deleteModal').modal('show');</script>
+    @endif
 @endsection

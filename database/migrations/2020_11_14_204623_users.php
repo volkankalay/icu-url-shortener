@@ -8,21 +8,20 @@ class Users extends Migration
 {
     /**
      * Run the migrations.
-     *
-     * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
+            $table->timestamps();
+            $table->softDeletes();
             $table->string('name');
             $table->string('surname');
             $table->string('email')->unique();
             $table->string('username')->unique();
             $table->string('password');
-            $table->integer('role')->default(3)->comment('1:admin,2:editor,3:user');
-            $table->softDeletes();
-            $table->timestamps();
+            $table->string('user_type', 7)->default('regular');
+            $table->rememberToken();
         });
     }
 

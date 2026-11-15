@@ -1,109 +1,76 @@
 @extends('dashboard')
-@section('css')
-<link href="{{asset('css')}}/jquery.dataTables.css" rel="stylesheet">
-@endsection
+
+@push('theme-css')
+    <link rel="stylesheet" href="{{ asset('css/jquery.dataTables.css') }}">
+@endpush
+
 @section('dashboardcontent')
+    @php($title = $suspended ? 'Dondurulan kullanıcılar' : 'Kullanıcılar')
+    <header class="dashboard-heading">
+        <div><h1>{{ $title }}</h1><p>{{ $users->count() }} kullanıcı</p></div>
+        <a class="dashboard-button" href="{{ route($suspended ? 'admin.users' : 'admin.users.trash') }}">
+            {{ $suspended ? 'Aktif kullanıcılar' : 'Dondurulan kullanıcılar' }} <i class="fas fa-arrow-right" aria-hidden="true"></i>
+        </a>
+    </header>
 
-  @if($errors->any())
-  <div class="card col-lg-6 text-white bg-light mx-auto mt-4">
-    <div class="card-body">
-      <h5 class="card-title m-auto text-center text-dark">
-          {{$errors->first()}}
-      </h5>
-    </div>
-  </div>
-  @endif
-<section>
-  <div class="card border-0 p-5">
-    <div class="text-center text-primary h1 my-4">
-      Kullanıcılar <h4><span class="badge badge-primary">{{$users->count()}}</span></h4>
-    </div>
-  <div class="table-responsive">
-    <table class="table table-striped  table-bordered"  id="table">
-      <thead>
-        <tr>
-          <th scope="col">#</th>
-          <th scope="col">Ad</th>
-          <th scope="col">Soyad</th>
-          <th scope="col">Kullanıcı Adı</th>
-          <th scope="col">E-Posta</th>
-          <th scope="col">Rol</th>
-          <th scope="col">&nbsp;</th>
-        </tr>
-      </thead>
-      <tbody>
-        @foreach($users as $user)
-        <tr>
-          <td>{{$user->id}}</td>
-          <td>{{$user->name}}</td>
-          <td>{{$user->surname}}</td>
-          <td>{{$user->username}}</td>
-          <td>{{$user->email}}</td>
-          <td>
-            @if($user->role==1)
-              <span class="text-danger">Yönetici</span>
-              @elseif($user->role==2)
-              <span class="text-primary">Editör</span>
-              @else
-              <span>Üye</span>
-            @endif
-          </td>
-          <td class="text-center">
-            @if($user->id!=Auth::user()->id)
-              <button class="btn btn-warning text-white btn-sm suspendBtn" suspend-id="{{$user->id}}" suspend-username="{{$user->username}}">
-                Dondur
-              </button>
+    @if ($errors->any())
+        <p class="dashboard-panel" role="alert">{{ $errors->first() }}</p>
+    @endif
 
-              <button class="btn btn-danger btn-sm roleChange" userid="{{$user->id}}" username="{{$user->username}}" rol="{{$user->role}}">
-                Yetki
-              </button>
-             @endif
-          </td>
-        </tr>
+    <x-dashboard.admin-table :label="$title" :empty="$users->isEmpty() ? 'Gösterilecek kullanıcı yok.' : null"
+        :sort-options="['0:asc' => 'Ad (A–Z)', '0:desc' => 'Ad (Z–A)', '1:asc' => 'E-posta (A–Z)', '1:desc' => 'E-posta (Z–A)', '2:asc' => 'Hesap türü (A–Z)', '2:desc' => 'Hesap türü (Z–A)']">
+        <x-slot:head>
+            <th scope="col" role="columnheader">Kullanıcı</th>
+            <th scope="col" role="columnheader">E-posta</th>
+            <th scope="col" role="columnheader">Hesap türü</th>
+            <th scope="col" role="columnheader" class="links-actions">İşlemler</th>
+        </x-slot:head>
+        @foreach ($users as $user)
+            <tr role="row">
+                <td role="cell" class="admin-wide-cell" data-order="{{ $user->full_name }}">
+                    <strong>{{ $user->full_name }}</strong><small class="admin-secondary">{{ '@' . $user->username }}</small>
+                </td>
+                <td role="cell" class="admin-wide-cell"><span class="links-cell-label" aria-hidden="true">E-posta</span>{{ $user->email }}</td>
+                <td role="cell"><span class="links-cell-label" aria-hidden="true">Hesap türü</span><span class="admin-type-badge">{{ $user->user_type->label() }}</span></td>
+                <td role="cell" class="links-actions">
+                    @if ($suspended || $user->id !== auth()->id())
+                        <div class="admin-table-actions">
+                            @unless ($suspended)
+                                <button type="button" class="dashboard-button" data-toggle="modal" data-target="#user-type-modal"
+                                        data-username="{{ $user->username }}" data-user-type="{{ $user->user_type->value }}">Yetkiyi düzenle</button>
+                            @endunless
+                            <button type="button" class="dashboard-button" data-toggle="modal" data-target="#user-status-modal"
+                                    data-user-id="{{ $user->id }}" data-username="{{ $user->username }}">{{ $suspended ? 'Aktif et' : 'Dondur' }}</button>
+                        </div>
+                    @else
+                        <small class="admin-secondary">Senin hesabın</small>
+                    @endif
+                </td>
+            </tr>
         @endforeach
-      </tbody>
-    </table>
-  </div>
-  <a href="{{route('admin.users.trash')}}" class="btn btn-info text-white m-auto">Üyeliği Dondurulanlar</a>
-</div>
+    </x-dashboard.admin-table>
 
-</section>
-@include('modals.userSuspend')
-@include('modals.userBeMod')
-
+    @include('modals.UserStatus')
+    @unless ($suspended)
+        @include('modals.userBeMod')
+    @endunless
 @endsection
+
 @section('js')
-<script src="{{asset('js')}}/jquery.dataTables.min.js"></script>
-<script type="text/javascript">
-$('#table').DataTable({
-    responsive: true
-});
-
-
-$("#table").on("click", ".suspendBtn", function (){
-    id = $(this)[0].getAttribute('suspend-id');
-    un = $(this)[0].getAttribute('suspend-username');
-    $('#suspendid').val(id);
-    $('#yazdirid').html(un);
-    $('#suspendModal').modal();
-});
-
-
-$("#table").on("click", ".roleChange", function (){
-    id = $(this)[0].getAttribute('userid');
-    un = $(this)[0].getAttribute('username');
-    rol = $(this)[0].getAttribute('rol');
-    $('#roleChangeId').val(id);
-    $('#roleChangeUn').val(un);
-    if(rol==1){
-      $('#roleChangeRol').html("Yönetici");
-    } else if (rol==2) {
-      $('#roleChangeRol').html("Editör");
-    } else{
-      $('#roleChangeRol').html("Üye");
-    }
-    $('#roleChangeModal').modal();
-});
-
-</script>
+    @if ($users->isNotEmpty())
+        <script src="{{ asset('js/jquery.dataTables.min.js') }}"></script>
+        <script src="{{ asset('js/admin-table.js') }}"></script>
+        <script>
+            $('#user-status-modal').on('show.bs.modal', (event) => {
+                const user = event.relatedTarget.dataset;
+                $('#status-user-id').val(user.userId);
+                $('#status-username').text(user.username);
+            });
+            $('#user-type-modal').on('show.bs.modal', (event) => {
+                const user = event.relatedTarget.dataset;
+                $('#type-username').val(user.username);
+                $('#roleSelector').val(user.userType);
+            });
+        </script>
+    @endif
 @endsection

@@ -1,0 +1,32 @@
+{
+    "preset": "laravel",
+    "exclude": [
+        "bootstrap/cache",
+        "storage",
+        "public",
+        "resources",
+        "vendor"
+    ],
+    "rules": {
+        "array_syntax": {
+            "syntax": "short"
+        },
+        "binary_operator_spaces": {
+            "default": "single_space",
+            "operators": {
+                "=>": "align_single_space_minimal"
+            }
+        },
+        "concat_space": {
+            "spacing": "one"
+        },
+        "ordered_imports": {
+            "sort_algorithm": "alpha"
+        },
+        "no_unused_imports": true,
+        "phpdoc_align": {
+            "align": "vertical",
+            "tags": ["method", "param", "property", "property-read", "property-write", "return", "throws", "var"]
+        }
+    }
+}
