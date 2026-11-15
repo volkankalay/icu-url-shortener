@@ -2,155 +2,90 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreLinkRequest;
+use App\Http\Requests\UpdateShortCodeRequest;
 use App\Models\Link;
-use App\Models\Visitor;
-use Illuminate\Contracts\Foundation\Application;
-use Illuminate\Http\JsonResponse;
+use App\Services\LinkShortener;
+use App\Support\VisitorOptions;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Redirector;
-use Illuminate\Support\Str;
-use UA;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class LinkController extends Controller
 {
-    /**
-     *
-     */
-    public function __construct()
+    public function store(StoreLinkRequest $request, LinkShortener $shortener): RedirectResponse
     {
-        $datas = new Controller;
-        view()->share($datas->publicDatas());
-    }
+        $link = $shortener->shorten($request->user(), $request->validated('url'));
 
-    /**
-     * @return string
-     */
-    public function generateShortUrl()
-    {
-        $result = base_convert(rand(1000, 99999), 10, 36);
-
-        $dangerLinks = ['dashboard', 'login', 'register', 'logout'];
-        foreach ($dangerLinks as $dl) {
-            if ($result == $dl) {
-                $this->generateShortUrl();
-            }
-        }
-        $data = Link::whereUrl($result)->first();
-        if ($data != null) {
-            $this->generateShortUrl();
-        }
-
-        return $result;
-    }
-
-    /**
-     * @param Request $request
-     *
-     * @return RedirectResponse
-     */
-    public function short(Request $request)
-    {
-        $data = $request->validate([
-                                     'url'  => 'url',
-                                     'user' => 'integer|exists:users,id'
-                                   ]);
-        $check = Link::where('url', $request->url)->where('owner', $request->user)->first();
-        if ($check == null) {
-            $short = $this->generateShortUrl(); //url shortener
-            $url = new Link;
-            $url->url = $request->url;
-            $url->short = $short;
-            $url->owner = $request->user;
-            $url->save();
-            $son = $url->short;
+        if ($link->wasRecentlyCreated) {
             toastr()->success('Link Kısaltıldı!');
         } else {
-            $son = $check->short;
             toastr()->info('Link Hesabınızda Zaten Bulunuyor!');
         }
 
-        return redirect()->route('url.create')->withErrors($son);
+        return redirect()->route('dashboard')->with('short_link', $link->short);
     }
 
     /**
-     * @param Request $request
-     * @param         $link
-     *
-     * @return Application|RedirectResponse|Redirector
+     * @throws Throwable
      */
-    public function route(Request $request, $link)
+    public function redirectToDestination(Request $request, string $link): RedirectResponse
     {
-        $checkLink = Link::whereShort($link)->first();
-        if ($checkLink == null) {
-            toastr()->warning('Adres geçersiz veya kaldırılmış.', 'Adres Hatası');
+        $destination = DB::transaction(function () use ($request, $link) {
+            $shortLink = Link::where('short', $link)->lockForUpdate()->first();
+            $target = $shortLink === null ? false : parse_url($shortLink->url);
+            if (! isset($target['host']) || ! in_array(strtolower($target['scheme'] ?? ''), ['http', 'https'], true)) {
+                return null;
+            }
+
+            $options = VisitorOptions::fromRequest($request);
+            if ($options !== null) {
+                $now = now()->toImmutable();
+                $ip = $options->ip();
+                $ipField = $options->ipv4 === null ? 'ipv6' : 'ipv4';
+                $recorded = $shortLink->visitors()->withTrashed()
+                    ->where('created_at', '>=', $now->startOfDay())
+                    ->where('created_at', '<', $now->addDay()->startOfDay())
+                    ->where(fn ($query) => $query->where('options->' . $ipField, $ip)->orWhere('options->ip', $ip))
+                    ->exists();
+
+                if (! $recorded) {
+                    $visit = $shortLink->visitors()->make(['options' => $options]);
+                    $visit->setCreatedAt($now)->setUpdatedAt($now)->save();
+                }
+            }
+            $shortLink->increment('total_clicks');
+
+            return $shortLink->url;
+        }, attempts: 3);
+
+        if ($destination === null) {
+            toastr()->warning('Adres geçersiz veya kaldırılmış.', title: 'Adres Hatası');
 
             return redirect()->route('home');
-        }                                                                      // is link exists?
-        $xsrf = $request->cookie('XSRF-TOKEN');
-        $result = UA::parse($request->server('HTTP_USER_AGENT')); //Visitor's info
-        $links = Link::whereShort($link)->first();               //Find link id
+        }
 
-        $visitor = new Visitor;
-        $visitor->ip_address = $_SERVER["REMOTE_ADDR"];
-        $visitor->browser = $result->ua->family;
-        $visitor->os = $result->os->family;
-        $visitor->link_id = $links->id;
-        $visitor->xsrf_token = $xsrf;                                    // Disabled for development!
-        $visitor->tarih = now();
-        $visitor->save();
-        $go = Link::whereShort($link)->first();
-
-        return redirect($go->url);                                              //go original address
+        return redirect()->away($destination);
     }
 
-    /**
-     * @param Request $request
-     *
-     * @return RedirectResponse
-     */
-    public function shortChange(Request $request)
+    public function update(UpdateShortCodeRequest $request): RedirectResponse
     {
-        if ($request->shortold == $request->shortnew) {
-            toastr()->error('Yeni adres eskisiyle aynı olamaz!');
+        $link = Link::where('short', $request->validated('shortold'))->firstOrFail();
+        abort_unless($request->user()->can('update', $link), 404);
 
-            return redirect()->route('url.list');
+        try {
+            $link->update(['short' => $request->validated('shortnew')]);
+        } catch (UniqueConstraintViolationException) {
+            throw ValidationException::withMessages([
+                'shortnew' => __('validation.unique', ['attribute' => __('validation.attributes')['shortnew'] ?? 'shortnew']),
+            ]);
         }
-        $data = $request->validate([
-                                     'shortold' => 'alpha_dash',
-                                     'shortnew' => 'alpha_dash|unique:links,short'
-                                   ]);
-        $link = Link::where('short', $request->shortold)->first();
-        $link->short = $request->shortnew;
-        $link->save();
+
         toastr()->success('Adres başarıyla değiştirildi!');
 
-        return redirect()->route('url.list');
+        return redirect()->route('url.show', $link->short);
     }
-
-    /**
-     * @param Request $request
-     *
-     * @return JsonResponse
-     */
-    public function checkUrl(Request $request)
-    {
-        $request->validate([
-                             'url' => 'string|required|max:255|min:2',
-                           ]);
-        $url = Str::of($request->input('url'))->trim();
-        $response = false;
-        if (!is_null($url)) {
-            $link = Link::where('short', '=', $url)->first();
-            if ($link == null) {
-                $response = true;
-            }
-        }
-
-        return response()->json([
-                                  'success' => $response,
-                                  'message' => 'URL ALREADY EXISTS',
-                                ]);
-    }
-
 }

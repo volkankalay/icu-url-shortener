@@ -13,14 +13,24 @@ class Links extends Migration
      */
     public function up()
     {
-      Schema::create('links', function (Blueprint $table) {
-        $table->id();
-        $table->string('url');
-        $table->string('short')->unique();
-        $table->foreignId('owner')->unsigned();
-        $table->timestamps();
-            $table->foreign('owner')->references('id')->on('users');
-      });
+        $driver = Schema::getConnection()->getDriverName();
+
+        Schema::create('links', function (Blueprint $table) use ($driver) {
+            $table->id();
+            $table->timestamps();
+            $table->softDeletes();
+            $table->unsignedBigInteger('owner_id');
+            $table->string('url');
+            $short = $table->string('short')->unique();
+            match ($driver) {
+                'mysql', 'mariadb' => $short->charset('utf8mb4')->collation('utf8mb4_bin'),
+                'pgsql'            => $short->collation('C'),
+                'sqlsrv'           => $short->collation('Latin1_General_100_BIN2'),
+                'sqlite'           => $short->collation('BINARY'),
+                default            => null,
+            };
+            $table->unsignedBigInteger('total_clicks')->default(0);
+        });
     }
 
     /**

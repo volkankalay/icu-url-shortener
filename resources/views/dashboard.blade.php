@@ -1,73 +1,36 @@
-@extends('layouts.master')
+@extends('layouts.themed')
+
+@section('body-class', 'landing dashboard-layout')
+
+@push('theme-css')
+    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+@endpush
+
 @section('content')
-<header class="masthead" style="padding-top:3rem!important;padding-bottom:3rem!important;">
-  <div class="container-fluid">
-    <div class="row">
-
-      <div class="col-lg-2 my-auto">
-        <div class="card mx-1 py-3 px-2">
-
-          <ul class="nav flex-column text-center">
-
-            <li class="nav-item">
-              <a class="nav-link @if(Request::segment(1)=='dashboard' && Request::segment(2)==NULL) text-dark font-weight-bolder @endif" href="{{route('dashboard')}}">
-                @lang('homepage.dashboard')
-              </a>
-            </li>
-
-        <div class="dropdown-divider"></div>
-
-            <li class="nav-item">
-              <a class="nav-link @if(Request::segment(2)=='link') text-dark font-weight-bolder @endif" href="{{route('url.create')}}">Link Oluştur</a>
-            </li>
-
-        <div class="dropdown-divider"></div>
-
-            <li class="nav-item">
-              <a class="nav-link @if(Request::segment(2)=='links') text-dark font-weight-bolder @endif" href="{{route('url.list')}}">Linklerim</a>
-            </li>
-
-        <div class="dropdown-divider"></div>
-
-            <li class="nav-item">
-              <a class="nav-link @if(Request::segment(1)=='profile') text-dark font-weight-bolder @endif" href="{{route('profile.index')}}">Profilim</a>
-            </li>
-
-
-@if(Auth::user()->role==1)
-        <div class="dropdown-divider"></div>
-
-            <li class="nav-item">
-              <a class="nav-link text-danger" href="{{route('admin.settings')}}">Site Ayarları</a>
-            </li>
-
-        <div class="dropdown-divider"></div>
-
-          <li class="nav-item">
-            <a class="nav-link text-danger" href="{{route('admin.users')}}">Kullanıcı Listesi</a>
-          </li>
-
-        <div class="dropdown-divider"></div>
-
-          <li class="nav-item">
-            <a class="nav-link text-danger" href="{{route('admin.links')}}">Link Listesi</a>
-          </li>
-
-@endif
-
-          </ul>
-        </div>
-      </div>
-
-      <div class="col-lg-10 my-1">
-
-        <div class="card mx-1 my-auto py-3 px-2">
+    <div class="dashboard-shell">
+        <nav class="dashboard-navigation" aria-label="Panel menüsü">
+            <div class="dashboard-nav-group">
+                @foreach ([
+                    ['dashboard', 'dashboard', 'th-large', 'Genel bakış'],
+                    ['url.list', ['url.list', 'url.show'], 'link', 'Bağlantılarım'],
+                    ['profile.index', 'profile.*', 'user-circle', 'Profilim'],
+                ] as [$route, $active, $icon, $label])
+                    <x-dashboard.nav-link :route="$route" :active="$active" :icon="$icon">{{ $label }}</x-dashboard.nav-link>
+                @endforeach
+            </div>
+            @can('viewAny', \App\Models\Link::class)
+                <div class="dashboard-nav-group">
+                    <p>Yönetim</p>
+                    @if (auth()->user()->isAdmin())
+                        <x-dashboard.nav-link route="admin.settings" active="admin.settings*" icon="cog">Site ayarları</x-dashboard.nav-link>
+                        <x-dashboard.nav-link route="admin.users" active="admin.users*" icon="users">Kullanıcılar</x-dashboard.nav-link>
+                    @endif
+                    <x-dashboard.nav-link route="admin.links" active="admin.links*" icon="list">Tüm bağlantılar</x-dashboard.nav-link>
+                </div>
+            @endcan
+        </nav>
+        <main class="dashboard-main">
             @yield('dashboardcontent')
-        </div>
-
-      </div>
-
+        </main>
     </div>
-  </div>
-</header>
 @endsection

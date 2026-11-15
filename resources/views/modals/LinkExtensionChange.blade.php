@@ -1,37 +1,21 @@
-
-<!--
-MODAL
--->
-<div class="modal fade bd-example-modal-md" tabindex="-1" id="updateModal" role="dialog" aria-labelledby="terminModal" aria-hidden="true">
-  <div class="modal-dialog modal-md" role="document">
-    <div class="modal-content">
-      <div class="text-right">
-        <button type="button" class="btn btn-light border" data-dismiss="modal"><i class="fa fa-times"></i></button>
-      </div>
-      <div class="card alert">
-        <form action="{{route('url.update.post')}}" method="post">
-          @csrf
-          <div class="basic-form m-t-20">
-            <div class="form-group">
-                <label class="font-weight-bold renk-blue">Mevcut Adres:</label>
-                <input name="shortold" type="text" id="shortold" class="form-control border-none input-flat bg-ash" readonly>
+<div class="modal fade" id="updateModal" tabindex="-1" role="dialog" aria-labelledby="update-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title h5" id="update-title">Kısa bağlantıyı düzenle</h2>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Kapat"><span aria-hidden="true">×</span></button>
             </div>
-          </div>
-
-            <div class="basic-form m-t-20">
-              <div class="form-group">
-                  <label class="font-weight-bold renk-blue">Yeni Adres:<span class="font-weight-bold" id="ourlinkhere"></span></label>
-                  <input name="shortnew" type="text" id="shortnew" class="form-control border-none input-flat bg-ash" required>
-              </div>
-            </div>
-
-            <div class="text-center">
-              <button type="button" class="btn btn-light border" data-dismiss="modal">İptal</button>
-              <button type="submit" class="btn btn-primary border">Güncelle</button>
-            </div>
-
-        </form>
-      </div>
+            <form action="{{ route('url.update.post') }}" method="post">
+                @csrf
+                <div class="modal-body dashboard-form">
+                    <x-auth.field name="shortold" label="Mevcut kısa kod" :default="$shortCode" readonly />
+                    <x-auth.field name="shortnew" label="Yeni kısa kod" :default="$shortCode" minlength="4" maxlength="191" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="dashboard-button" data-dismiss="modal">İptal</button>
+                    <button type="submit" class="dashboard-button dashboard-primary">Kaydet</button>
+                </div>
+            </form>
+        </div>
     </div>
-  </div>
 </div>

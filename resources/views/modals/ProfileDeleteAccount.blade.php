@@ -1,41 +1,25 @@
-
-<!--
-MODAL PASSWORD CHANGE
--->
-<div class="modal fade bd-example-modal-md" tabindex="-1" id="deleteModal" role="dialog" aria-labelledby="passwordUpdateModal" aria-hidden="true">
-  <div class="modal-dialog modal-md" role="document">
-    <div class="modal-content">
-      <div class="text-right">
-        <button type="button" class="btn btn-light border" data-dismiss="modal"><i class="fa fa-times"></i></button>
-      </div>
-      <div class="card alert">
-        <form action="{{route('profile.delete')}}" method="post">
-          @csrf
-          <input name="username" type="text" value="{{$profile->username}}" class="form-control border-none input-flat bg-ash" hidden>
-
-          <div class="basic-form m-t-20">
-            <div class="form-group">
-                <label class="font-weight-bold renk-blue">Mevcut Şifre:</label>
-                <input name="password_old" type="password" class="form-control border-none input-flat bg-ash" required>
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="profile-delete-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <form class="modal-content" action="{{ route('profile.delete') }}" method="post">
+            @csrf
+            <div class="modal-header">
+                <h2 class="modal-title h5" id="profile-delete-title">Hesabı kapat</h2>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Kapat"><span aria-hidden="true">×</span></button>
             </div>
-          </div>
-
-          <div class="input-group mb-3">
-            <div class="input-group-prepend">
-              <div class="input-group-text">
-                <input type="checkbox" id="cb1" required>
-              </div>
+            <div class="modal-body profile-delete-form">
+                <x-auth.field name="current_password" field-id="delete-current-password" label="Mevcut şifre" type="password" autocomplete="current-password" error-bag="accountDeletion" />
+                <label class="auth-remember">
+                    <input type="checkbox" name="confirm_delete" value="1" @checked(old('confirm_delete')) required>
+                    Hesabımı kapatmak istiyorum.
+                </label>
+                @error('confirm_delete', 'accountDeletion')
+                    <p class="auth-field-error" role="alert">{{ $message }}</p>
+                @enderror
             </div>
-            <label class="form-control" for="cb1">Hesabımı kapatmak istiyorum.</label>
-          </div>
-
-            <div class="text-center">
-              <button type="submit" class="btn btn-sm btn-danger border">Hesabı Kapat</button>
-              <button type="button" class="btn btn-lg btn-success border" data-dismiss="modal">İptal Et</button>
+            <div class="modal-footer">
+                <button type="button" class="dashboard-button" data-dismiss="modal">İptal</button>
+                <button type="submit" class="dashboard-button profile-close-button">Hesabı kapat</button>
             </div>
-
         </form>
-      </div>
     </div>
-  </div>
 </div>

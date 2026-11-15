@@ -15,14 +15,10 @@ class Visitors extends Migration
     {
         Schema::create('visitors', function (Blueprint $table) {
             $table->id();
-            $table->string('ip_address', 45)->nullable();
-            $table->string('browser', 50)->nullable();
-            $table->string('os', 50)->nullable();
-            $table->string('xsrf_token')->nullable();
-            $table->foreignId('link_id')->unsigned();
-            $table->timestamp('tarih')->nullable();
-
-              $table->foreign('link_id')->references('id')->on('links');
+            $table->timestamps();
+            $table->softDeletes();
+            $table->unsignedBigInteger('link_id')->index();
+            $table->json('options')->nullable();
         });
     }
 

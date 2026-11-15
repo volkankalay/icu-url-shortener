@@ -8,33 +8,30 @@ class Settings extends Migration
 {
     /**
      * Run the migrations.
-     *
-     * @return void
      */
-    public function up()
+    public function up(): void
     {
-      Schema::create('settings', function (Blueprint $table) {
-          $table->id();
-          $table->string('site')->default('https://u.vlkn.icu');
-          $table->string('title');
-          $table->string('keywords')->nullable();
-          $table->string('description')->nullable();
-          $table->string('logo');
-          $table->boolean('login')->default(1);
-          $table->boolean('register')->default(1);
-          $table->string('favicon')->nullable();
-          $table->longText('header_code')->nullable();
-          $table->longText('footer_code')->nullable();
-          $table->timestamps();
-      });
+        Schema::create('settings', function (Blueprint $table) {
+            $table->id();
+            $table->timestamps();
+            $table->softDeletes();
+            $table->string('site');
+            $table->string('title')->nullable();
+            $table->string('keywords')->nullable();
+            $table->string('description')->nullable();
+            $table->string('logo')->nullable();
+            $table->boolean('login')->default(1);
+            $table->boolean('register')->default(1);
+            $table->string('favicon')->nullable();
+            $table->longText('header_code')->nullable();
+            $table->longText('footer_code')->nullable();
+        });
     }
 
     /**
      * Reverse the migrations.
-     *
-     * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('settings');
     }

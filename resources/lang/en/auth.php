@@ -1,6 +1,16 @@
 <?php
 
 return [
+    'current_password_invalid' => 'Your current password is incorrect.',
+    'confirm_delete_required' => 'Confirm that you want to close your account.',
+    'password_updated' => 'Your password has been updated.',
+    'last_admin' => 'The last administrator account cannot be closed.',
+    'account_deleted' => 'Your account has been closed.',
+    'login_intro' => 'Sign in to manage your links and track visits.',
+    'register_intro' => 'Create an account to shorten links and track their views.',
+    'show_password' => 'Show password',
+    'password_minimum' => 'Use at least 8 characters.',
+    'password_invalid' => 'The password is invalid or too long.',
 
     /*
     |--------------------------------------------------------------------------
